@@ -1,6 +1,7 @@
 import base64
 import datetime
 import logging
+import os
 import requests
 import threading
 import time
@@ -8,10 +9,11 @@ import time
 from flask import Flask
 from io import BytesIO
 from matplotlib.figure import Figure
+from pathlib import Path
 
 
-FILE = './data.txt'
-SAMPLE_TIME = 5
+FILE = './data/data.txt'
+SAMPLE_TIME = int(os.environ['SAMPLE_TIME']) 
 eth_sold = 0.10540447
 txn_fee = 0.001421961427074638
 dai = 399.139261634971299146
@@ -78,6 +80,7 @@ def plot(data):
 
 app = Flask(__name__)
 
+
 @app.route('/')
 def index():
     current_row = get_row_data()
@@ -89,6 +92,9 @@ if __name__ == '__main__':
     format = "%(asctime)s: %(message)s"
     logging.basicConfig(format=format, level=logging.INFO,
                         datefmt="%H:%M:%S")
+    p = Path(FILE)
+    if not p.exists():
+        p.touch()
     t = threading.Thread(target=scrape_data, args=(SAMPLE_TIME,))
     t.start()
-    app.run()
+    app.run(host="0.0.0.0", port=5000)
